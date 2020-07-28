@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 import vuetify from './plugins/vuetify';
 import VueTextareaAutosize from 'vue-textarea-autosize';
+Vue.use(VueTextareaAutosize);
 
 // Your web app's Firebase configuration
 import firebase from 'firebase/app';

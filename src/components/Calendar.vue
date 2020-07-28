@@ -108,20 +108,32 @@
               :color="selectedEvent.color"
               dark
             >
-              <v-btn icon>
-                <v-icon>mdi-pencil</v-icon>
+              <v-btn icon @click="delteEvent(selectedEvent)">
+                <v-icon>mdi-delete</v-icon>
               </v-btn>
               <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
               <v-spacer></v-spacer>
-              <v-btn icon>
-                <v-icon>mdi-heart</v-icon>
-              </v-btn>
-              <v-btn icon>
-                <v-icon>mdi-dots-vertical</v-icon>
-              </v-btn>
+              
             </v-toolbar>
             <v-card-text>
-              <span v-html="selectedEvent.details"></span>
+             <v-form v-if="currentlyEditing !== selectedEvent.id">
+               
+             </v-form>
+             <v-form v-else>
+               <v-text-field 
+                type="text" v-model="selectedEvent.name"
+                label="edit name"
+                >
+                <textarea-autosize 
+                  v-model="selectedEvent.details"
+                  type="text"
+                  style="width: 100%"
+                  :min-height="100"
+                  >
+
+                </textarea-autosize>
+               </v-text-field>
+             </v-form>
             </v-card-text>
             <v-card-actions>
               <v-btn
@@ -131,6 +143,20 @@
               >
                 Cancel
               </v-btn>
+              <v-btn
+                v-if="currentlyEditing !== selectedEvent.id"
+                text
+                color="secondary"
+                @click.prevent="editEvent(selectedEvent.id)"                
+              >
+                Edit
+              </v-btn>
+
+              <v-btn 
+                v-else
+                text
+                @click.prevent="updateEvent(selectedEvent)"
+              >Save</v-btn>
             </v-card-actions>
           </v-card>
         </v-menu>
@@ -177,6 +203,30 @@ import {db} from '../main';
       this.getEvent();
     },
     methods: {
+      async updateEvent(ev){
+        try {
+          await db.collection('events').doc(ev.id).update({
+            name: ev.name,
+            details: ev.details
+          });
+          this.selectedOpen = false;
+          this.currentlyEditing=null;
+        } catch (error) {
+          console.log(error)
+        }
+      },
+      editEvent(id){
+        this.currentlyEditing=id;
+      },
+      async delteEvent(e){
+        try {
+          await db.collection('events').doc(e.id).delete();
+          this.selectedOpen = false;
+          this.getEvent();
+        } catch (error) {
+          console.log(error);
+        }
+      },
       async addEvent(){
           try {
               if(this.name && this.start && this.end){
@@ -187,7 +237,7 @@ import {db} from '../main';
                       end: this.end,
                       color:this.color
                   });
-                  this.getEvents();
+                  this.getEvent();
 
                   this.name = null;
                   this.details = null;
@@ -204,7 +254,7 @@ import {db} from '../main';
             const snapchot = await db.collection('events').get();
             const events = [];
             snapchot.forEach(doc =>{
-                console.log(doc.data());
+                // console.log(doc.data());
                 let eventData= doc.data();
                 eventData.id =doc.id;
                 events.push(eventData);
